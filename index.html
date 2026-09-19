@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#171516" />
+  <link rel="icon" href="data:," />
+  <title>Review your items</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --page: #eee8e3;
+      --page-glow: rgba(183, 116, 112, .13);
+      --surface: #1b1819;
+      --surface-2: #242021;
+      --surface-3: #2b2627;
+      --ink: #fffaf5;
+      --muted: #c9bdb8;
+      --faint: #938885;
+      --rose: #d7a29c;
+      --rose-strong: #e7b6ae;
+      --line: rgba(255, 250, 245, .13);
+      --shadow: 0 26px 80px rgba(35, 24, 24, .23);
+      --button-ink: #251c1d;
+      --success: #bcd0bb;
+      --warning: #efd19f;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #111011;
+        --page-glow: rgba(190, 122, 115, .12);
+        --surface: #1a1718;
+        --surface-2: #221e1f;
+        --surface-3: #292425;
+        --ink: #fffaf5;
+        --muted: #cfc3be;
+        --faint: #9c918d;
+        --rose: #d9a49e;
+        --rose-strong: #efbcb4;
+        --line: rgba(255, 250, 245, .14);
+        --shadow: 0 30px 90px rgba(0, 0, 0, .42);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--page); }
+    body {
+      min-height: 100vh;
+      min-height: 100svh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 8%, var(--page-glow), transparent 34rem),
+        linear-gradient(145deg, color-mix(in srgb, var(--page) 94%, #fff 6%), var(--page));
+      font-family: "Avenir Next", Avenir, "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .shell {
+      width: min(100%, 760px);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .shell::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--rose-strong), #8e5c59);
+    }
+    .content { padding: clamp(24px, 5vw, 48px); }
+    .trust {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 20px;
+      color: var(--rose-strong);
+      font-size: .76rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .trust svg { width: 15px; height: 15px; flex: 0 0 auto; }
+    h1 {
+      margin: 0;
+      max-width: 12ch;
+      font-family: Baskerville, "Iowan Old Style", "Palatino Linotype", serif;
+      font-size: clamp(2.35rem, 8vw, 4.35rem);
+      font-weight: 400;
+      line-height: .96;
+      letter-spacing: -.035em;
+    }
+    .intro {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.55;
+      max-width: 55ch;
+    }
+    .summary { margin-top: clamp(28px, 5vw, 40px); }
+    .summary-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      padding-bottom: 11px;
+      border-bottom: 1px solid var(--line);
+    }
+    .summary-title {
+      margin: 0;
+      color: var(--muted);
+      font-size: .74rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .item-count { color: var(--faint); font-size: .82rem; }
+    .items { list-style: none; padding: 0; margin: 0; }
+    .item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .item-name {
+      margin: 0;
+      font-family: Baskerville, "Iowan Old Style", "Palatino Linotype", serif;
+      font-size: 1.12rem;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+    .item-meta { margin-top: 5px; color: var(--muted); font-size: .84rem; }
+    .item-total { font-variant-numeric: tabular-nums; font-size: .98rem; white-space: nowrap; }
+    .totals {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: baseline;
+      padding: 18px 0 0;
+    }
+    .total-label { color: var(--muted); font-size: .9rem; }
+    .total-amount {
+      font-family: Baskerville, "Iowan Old Style", "Palatino Linotype", serif;
+      font-size: 1.7rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .coupon {
+      margin-top: 18px;
+      padding: 13px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .82rem;
+    }
+    .coupon strong {
+      color: var(--ink);
+      font-size: .82rem;
+      letter-spacing: .05em;
+      overflow-wrap: anywhere;
+      text-align: right;
+    }
+    .notice {
+      margin-top: 18px;
+      padding: 13px 15px;
+      background: color-mix(in srgb, var(--warning) 9%, transparent);
+      border: 1px solid color-mix(in srgb, var(--warning) 28%, transparent);
+      color: var(--warning);
+      font-size: .84rem;
+      line-height: 1.45;
+    }
+    .action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 54px;
+      margin-top: 24px;
+      padding: 14px 20px;
+      border: 0;
+      background: var(--rose-strong);
+      color: var(--button-ink);
+      font: inherit;
+      font-weight: 750;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .18s ease, transform .18s ease;
+    }
+    .action:hover { background: #f3c8c1; }
+    .action:active { transform: translateY(1px); }
+    .action:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    .action svg { width: 18px; height: 18px; }
+    .fine-print { margin: 13px 0 0; color: var(--faint); font-size: .74rem; line-height: 1.45; text-align: center; }
+    .empty {
+      margin-top: clamp(28px, 5vw, 40px);
+      padding: clamp(24px, 5vw, 36px);
+      background: var(--surface-2);
+      border-top: 1px solid var(--line);
+      text-align: center;
+    }
+    .empty-mark {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: var(--surface-3);
+      color: var(--rose-strong);
+    }
+    .empty-mark svg { width: 22px; height: 22px; }
+    .empty h2 {
+      margin: 0;
+      font-family: Baskerville, "Iowan Old Style", "Palatino Linotype", serif;
+      font-size: 1.55rem;
+      font-weight: 400;
+    }
+    .empty p { margin: 9px auto 0; max-width: 42ch; color: var(--muted); line-height: 1.5; font-size: .94rem; }
+    .empty .action { max-width: 340px; margin-inline: auto; }
+    [hidden] { display: none !important; }
+    @media (max-width: 520px) {
+      body { place-items: start center; padding-inline: 0; padding-top: 0; padding-bottom: 0; background: var(--surface); }
+      .shell { min-height: 100svh; border: 0; box-shadow: none; }
+      .shell::before { width: 3px; }
+      .content { padding: 28px 22px 32px 25px; }
+      .item { gap: 10px; padding: 16px 0; }
+      .item-name { font-size: 1.03rem; }
+      .empty { margin-inline: -22px; padding-inline: 25px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .action { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell" aria-labelledby="page-title">
+    <div class="content">
+      <p class="trust">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        Secure checkout through Square
+      </p>
+      <h1 id="page-title">Review your items</h1>
+      <p class="intro" id="intro">Confirm your selection, then continue to Sweetiger’s secure checkout.</p>
+
+      <section class="summary" id="summary" hidden aria-labelledby="summary-title">
+        <div class="summary-head">
+          <h2 class="summary-title" id="summary-title">Order summary</h2>
+          <span class="item-count" id="item-count"></span>
+        </div>
+        <ul class="items" id="items"></ul>
+        <div class="totals">
+          <span class="total-label">Item total</span>
+          <strong class="total-amount" id="total"></strong>
+        </div>
+        <div class="coupon" id="coupon" hidden>
+          <span>Coupon code</span>
+          <strong id="coupon-code"></strong>
+        </div>
+        <div class="notice" id="notice" hidden role="status"></div>
+        <a class="action" id="continue" href="https://sweetiger.square.site">
+          Continue to secure checkout
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <p class="fine-print">Availability, shipping, taxes and any discount are confirmed on Square.</p>
+      </section>
+
+      <section class="empty" id="empty" aria-labelledby="empty-title">
+        <div class="empty-mark">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        </div>
+        <h2 id="empty-title">Let’s find your items</h2>
+        <p id="empty-copy">This shopping link doesn’t include a product yet. Browse the shop to choose something special.</p>
+        <a class="action" href="https://sweetiger.square.site">
+          Shop all products
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const LOOKUP = {"P5GC24UVFDX7EIXFM4FNOTNU":{"name":"Mini Unicorn Articulated Toy \u2013 Safe, Durable, 3D\u2010Printed Magic","price_cents":1000,"url":"https://sweetiger.square.site/product/mini-unicorn-articulated-toy-safe-durable-3d-printed-magic/P5GC24UVFDX7EIXFM4FNOTNU","item_id":"P5GC24UVFDX7EIXFM4FNOTNU"},"F3NP4BWA25GUFLNQEPR2OFOU":{"name":"Mini Unicorn Articulated Toy \u2013 Safe, Durable, 3D\u2010Printed Magic","price_cents":1000,"url":"https://sweetiger.square.site/product/mini-unicorn-articulated-toy-safe-durable-3d-printed-magic/P5GC24UVFDX7EIXFM4FNOTNU","item_id":"P5GC24UVFDX7EIXFM4FNOTNU"},"ODFGL57DJMKTDM65HQD7U5AZ":{"name":"Modern Black Diamond Mesh Mini Planter & Catchall (3\" Opening)","price_cents":1700,"url":"https://sweetiger.square.site/product/modern-black-diamond-mesh-mini-planter-catchall-3-opening-/ODFGL57DJMKTDM65HQD7U5AZ","item_id":"ODFGL57DJMKTDM65HQD7U5AZ"},"PS4HWTHPWHFSW7BN5PHJ2ZBQ":{"name":"Modern Black Diamond Mesh Mini Planter & Catchall (3\" Opening)","price_cents":1700,"url":"https://sweetiger.square.site/product/modern-black-diamond-mesh-mini-planter-catchall-3-opening-/ODFGL57DJMKTDM65HQD7U5AZ","item_id":"ODFGL57DJMKTDM65HQD7U5AZ"},"IKQKIANZKASLCQKQR6AKCMXI":{"name":"Heart Shaped Rose Keepsake Box","price_cents":2300,"url":"https://sweetiger.square.site/product/heart-shaped-rose-keepsake-box/IKQKIANZKASLCQKQR6AKCMXI","item_id":"IKQKIANZKASLCQKQR6AKCMXI"},"YYD2K2ZQQHXZPYZDQVIMM7X4":{"name":"Heart Shaped Rose Keepsake Box","price_cents":2300,"url":"https://sweetiger.square.site/product/heart-shaped-rose-keepsake-box/IKQKIANZKASLCQKQR6AKCMXI","item_id":"IKQKIANZKASLCQKQR6AKCMXI"},"MGAHUXNRAN4SO4A2E3AO7DCO":{"name":"Sculpted Floral Beeswax Candle | Two-Tone Rose in Stemmed Glass | Gift for Her","price_cents":4900,"url":"https://sweetiger.square.site/product/sculpted-floral-beeswax-candle-two-tone-rose-in-stemmed-glass-gift-for-her/MGAHUXNRAN4SO4A2E3AO7DCO","item_id":"MGAHUXNRAN4SO4A2E3AO7DCO"},"IBLV47WTVBIXYQLZAHC4THDR":{"name":"Sculpted Floral Beeswax Candle | Two-Tone Rose in Stemmed Glass | Gift for Her","price_cents":4900,"url":"https://sweetiger.square.site/product/sculpted-floral-beeswax-candle-two-tone-rose-in-stemmed-glass-gift-for-her/MGAHUXNRAN4SO4A2E3AO7DCO","item_id":"MGAHUXNRAN4SO4A2E3AO7DCO"},"4N3U23QNNOVONPSVXCRZWYIG":{"name":"3D Printed Banana Bowl","price_cents":3900,"url":"https://sweetiger.square.site/product/3d-printed-banana-bowl/4N3U23QNNOVONPSVXCRZWYIG","item_id":"4N3U23QNNOVONPSVXCRZWYIG"},"RPJQS2NRNAOAUWOLOJDFALCU":{"name":"3D Printed Banana Bowl","price_cents":3900,"url":"https://sweetiger.square.site/product/3d-printed-banana-bowl/4N3U23QNNOVONPSVXCRZWYIG","item_id":"4N3U23QNNOVONPSVXCRZWYIG"},"WU3RZ4QN3M3MCL3GBSTJBEEQ":{"name":"Beeswax Candle Melts | Flower-Shaped, Phthalate-Free | Gift-Ready Set of 14","price_cents":3000,"url":"https://sweetiger.square.site/product/beeswax-candle-melts-flower-shaped-phthalate-free-gift-ready-set-of-14/WU3RZ4QN3M3MCL3GBSTJBEEQ","item_id":"WU3RZ4QN3M3MCL3GBSTJBEEQ"},"TKECRDXMLJWM5FAOLIHALNQO":{"name":"Beeswax Candle Melts | Flower-Shaped, Phthalate-Free | Gift-Ready Set of 14","price_cents":3000,"url":"https://sweetiger.square.site/product/beeswax-candle-melts-flower-shaped-phthalate-free-gift-ready-set-of-14/WU3RZ4QN3M3MCL3GBSTJBEEQ","item_id":"WU3RZ4QN3M3MCL3GBSTJBEEQ"},"GFSEEUWSUICG3WKRS6WHRVJY":{"name":"Lightweight Elven Ear Wraps - Bright Blue 3D Printed Fantasy Jewelry (No | Stocking Stuffer Gift","price_cents":2000,"url":"https://sweetiger.square.site/product/lightweight-elven-ear-wraps-bright-blue-3d-printed-fantasy-jewelry-no-stocking-stuffer-gift/GFSEEUWSUICG3WKRS6WHRVJY","item_id":"GFSEEUWSUICG3WKRS6WHRVJY"},"DHYO7LLI7WVQA3J6MTKY2ZWM":{"name":"Lightweight Elven Ear Wraps - Bright Blue 3D Printed Fantasy Jewelry (No | Stocking Stuffer Gift","price_cents":2000,"url":"https://sweetiger.square.site/product/lightweight-elven-ear-wraps-bright-blue-3d-printed-fantasy-jewelry-no-stocking-stuffer-gift/GFSEEUWSUICG3WKRS6WHRVJY","item_id":"GFSEEUWSUICG3WKRS6WHRVJY"},"DL6UVR7P3ZBY6YZ4KM2RYRTX":{"name":"3D Printed Rainbow Pedestal Bowl - Fluted Decorative Fruit & Catchall Dish with Drainage Hole","price_cents":3200,"url":"https://sweetiger.square.site/product/3d-printed-rainbow-pedestal-bowl-fluted-decorative-fruit-catchall-dish-with-drainage-hole/DL6UVR7P3ZBY6YZ4KM2RYRTX","item_id":"DL6UVR7P3ZBY6YZ4KM2RYRTX"},"O3JSMHCQMILRK6O65PT6TCJX":{"name":"3D Printed Rainbow Pedestal Bowl - Fluted Decorative Fruit & Catchall Dish with Drainage Hole","price_cents":3200,"url":"https://sweetiger.square.site/product/3d-printed-rainbow-pedestal-bowl-fluted-decorative-fruit-catchall-dish-with-drainage-hole/DL6UVR7P3ZBY6YZ4KM2RYRTX","item_id":"DL6UVR7P3ZBY6YZ4KM2RYRTX"},"XBRTMBE4LZUANJAEK3GSVRB7":{"name":"3D Printed Glow-in-the-Dark Interlocking Burr Puzzle & Fidget Toy | Sensory Stocking Stuffer","price_cents":800,"url":"https://sweetiger.square.site/product/3d-printed-glow-in-the-dark-interlocking-burr-puzzle-fidget-toy-sensory-stocking-stuffer/XBRTMBE4LZUANJAEK3GSVRB7","item_id":"XBRTMBE4LZUANJAEK3GSVRB7"},"RSNLJGIOJIZYNVUBB4Q7E35M":{"name":"3D Printed Glow-in-the-Dark Interlocking Burr Puzzle & Fidget Toy | Sensory Stocking Stuffer","price_cents":800,"url":"https://sweetiger.square.site/product/3d-printed-glow-in-the-dark-interlocking-burr-puzzle-fidget-toy-sensory-stocking-stuffer/XBRTMBE4LZUANJAEK3GSVRB7","item_id":"XBRTMBE4LZUANJAEK3GSVRB7"},"V66HVC7OB7GCEINMASNVYWGR":{"name":"Cute Axolotl Fidget Toy - 3D Printed Kids Toy | PLA | Ages 3+ | Stocking Stuffer","price_cents":500,"url":"https://sweetiger.square.site/product/cute-axolotl-fidget-toy-3d-printed-kids-toy-pla-ages-3-stocking-stuffer/V66HVC7OB7GCEINMASNVYWGR","item_id":"V66HVC7OB7GCEINMASNVYWGR"},"PRVBXLLNRANOWS3ATORUQCKG":{"name":"Cute Axolotl Fidget Toy - 3D Printed Kids Toy | PLA | Ages 3+ | Stocking Stuffer","price_cents":500,"url":"https://sweetiger.square.site/product/cute-axolotl-fidget-toy-3d-printed-kids-toy-pla-ages-3-stocking-stuffer/V66HVC7OB7GCEINMASNVYWGR","item_id":"V66HVC7OB7GCEINMASNVYWGR"},"34PSWISYQVHYG3KMDVMIUB7T":{"name":"3D Printed Infinity Cube Fidget Toy - Stress & Anxiety Relief | Sensory Stocking Stuffer","price_cents":1500,"url":"https://sweetiger.square.site/product/3d-printed-infinity-cube-fidget-toy-stress-anxiety-relief-sensory-stocking-stuffer/34PSWISYQVHYG3KMDVMIUB7T","item_id":"34PSWISYQVHYG3KMDVMIUB7T"},"6WBPMXFNPZNJ7ZUAIXFMUSVC":{"name":"3D Printed Infinity Cube Fidget Toy - Stress & Anxiety Relief | Sensory Stocking Stuffer","price_cents":1500,"url":"https://sweetiger.square.site/product/3d-printed-infinity-cube-fidget-toy-stress-anxiety-relief-sensory-stocking-stuffer/34PSWISYQVHYG3KMDVMIUB7T","item_id":"34PSWISYQVHYG3KMDVMIUB7T"},"Y6STWL7ZLMCR4OLVU4UIDMKX":{"name":"3D Printed Articulated Flexi Turtles | Set of 22 | Fidget Toys","price_cents":2000,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-turtles-set-of-22-fidget-toys/Y6STWL7ZLMCR4OLVU4UIDMKX","item_id":"Y6STWL7ZLMCR4OLVU4UIDMKX"},"RIMUQH4FUCZIFHD56D6CA6B6":{"name":"3D Printed Articulated Flexi Turtles | Set of 22 | Fidget Toys","price_cents":2000,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-turtles-set-of-22-fidget-toys/Y6STWL7ZLMCR4OLVU4UIDMKX","item_id":"Y6STWL7ZLMCR4OLVU4UIDMKX"},"V2UWLTVV43G6JG6JFXW4WSAX":{"name":"3D Articulated Flexi Orca (killer whale) | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-articulated-flexi-orca-killer-whale-sensory-stocking-stuffer/V2UWLTVV43G6JG6JFXW4WSAX","item_id":"V2UWLTVV43G6JG6JFXW4WSAX"},"WAARFZ4QJDQLCVGDCMNHH4VU":{"name":"3D Articulated Flexi Orca (killer whale) | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-articulated-flexi-orca-killer-whale-sensory-stocking-stuffer/V2UWLTVV43G6JG6JFXW4WSAX","item_id":"V2UWLTVV43G6JG6JFXW4WSAX"},"2VSRSAYFFQ35YKJQOBCVJEKO":{"name":"Handcrafted Botanical Beeswax Candle | Phthalate-Free Gift for Her","price_cents":3000,"url":"https://sweetiger.square.site/product/handcrafted-botanical-beeswax-candle-phthalate-free-gift-for-her/2VSRSAYFFQ35YKJQOBCVJEKO","item_id":"2VSRSAYFFQ35YKJQOBCVJEKO"},"J7M7DLG2RJFUCMJWCXLXRDMS":{"name":"Handcrafted Botanical Beeswax Candle | Phthalate-Free Gift for Her","price_cents":3000,"url":"https://sweetiger.square.site/product/handcrafted-botanical-beeswax-candle-phthalate-free-gift-for-her/2VSRSAYFFQ35YKJQOBCVJEKO","item_id":"2VSRSAYFFQ35YKJQOBCVJEKO"},"2UMFD5RESDZXU3VKIG24X7GA":{"name":"Coastal Seashell Coaster Set with Matching Shell Holder (Set of 6 coasters plus 1 base)","price_cents":1800,"url":"https://sweetiger.square.site/product/coastal-seashell-coaster-set-with-matching-shell-holder-set-of-6-coasters-plus-1-base-/2UMFD5RESDZXU3VKIG24X7GA","item_id":"2UMFD5RESDZXU3VKIG24X7GA"},"7JBMAEMRLAZ2ECV57Z2LTBKM":{"name":"Coastal Seashell Coaster Set with Matching Shell Holder (Set of 6 coasters plus 1 base)","price_cents":1800,"url":"https://sweetiger.square.site/product/coastal-seashell-coaster-set-with-matching-shell-holder-set-of-6-coasters-plus-1-base-/2UMFD5RESDZXU3VKIG24X7GA","item_id":"2UMFD5RESDZXU3VKIG24X7GA"},"P3L4BM2QZ5RH5JUEKADOGPW3":{"name":"Sculptural Lamp Full Collection","price_cents":18000,"url":"https://sweetiger.square.site/product/sculptural-lamp-full-collection/P3L4BM2QZ5RH5JUEKADOGPW3","item_id":"P3L4BM2QZ5RH5JUEKADOGPW3"},"JWGSXP2TV6QIY3PM3Q3RWHMM":{"name":"Sculptural Lamp Full Collection","price_cents":18000,"url":"https://sweetiger.square.site/product/sculptural-lamp-full-collection/P3L4BM2QZ5RH5JUEKADOGPW3","item_id":"P3L4BM2QZ5RH5JUEKADOGPW3"},"5RRWUXHOAYYBRM7RPS4BS6ZI":{"name":"Seashell Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/seashell-lamp/5RRWUXHOAYYBRM7RPS4BS6ZI","item_id":"5RRWUXHOAYYBRM7RPS4BS6ZI"},"6E766WTJOCSMG3756VA4KNXS":{"name":"Seashell Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/seashell-lamp/5RRWUXHOAYYBRM7RPS4BS6ZI","item_id":"5RRWUXHOAYYBRM7RPS4BS6ZI"},"KCVE5K34G7UVYFCLXXEIQRBE":{"name":"Toy Bear","price_cents":1800,"url":"https://sweetiger.square.site/product/toy-bear/KCVE5K34G7UVYFCLXXEIQRBE","item_id":"KCVE5K34G7UVYFCLXXEIQRBE"},"2MJFFV6526VFJQELKH35P5U6":{"name":"Toy Bear","price_cents":1800,"url":"https://sweetiger.square.site/product/toy-bear/KCVE5K34G7UVYFCLXXEIQRBE","item_id":"KCVE5K34G7UVYFCLXXEIQRBE"},"ORBGRHC6TQOSKHNZTVSF2YKS":{"name":"Mini 3D Printed Articulated Flexi Bumblebee Fidget Toy | Cute Desk Pet & Planter Decor","price_cents":1800,"url":"https://sweetiger.square.site/product/mini-3d-printed-articulated-flexi-bumblebee-fidget-toy-cute-desk-pet-planter-decor/ORBGRHC6TQOSKHNZTVSF2YKS","item_id":"ORBGRHC6TQOSKHNZTVSF2YKS"},"XNBQJPO2KZNBYGQCSQ6RCT3E":{"name":"Mini 3D Printed Articulated Flexi Bumblebee Fidget Toy | Cute Desk Pet & Planter Decor","price_cents":1800,"url":"https://sweetiger.square.site/product/mini-3d-printed-articulated-flexi-bumblebee-fidget-toy-cute-desk-pet-planter-decor/ORBGRHC6TQOSKHNZTVSF2YKS","item_id":"ORBGRHC6TQOSKHNZTVSF2YKS"},"6FMFJVDXEW2XX7YRBYZZCLV3":{"name":"3D Printed Articulated Squid, Fidget Toy | Flexible Desk Pet & Ocean | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-squid-fidget-toy-flexible-desk-pet-ocean-sensory-stocking-stuffer/6FMFJVDXEW2XX7YRBYZZCLV3","item_id":"6FMFJVDXEW2XX7YRBYZZCLV3"},"ZHQYKFUSUVJTZLBTJS7XJPF6":{"name":"3D Printed Articulated Squid, Fidget Toy | Flexible Desk Pet & Ocean | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-squid-fidget-toy-flexible-desk-pet-ocean-sensory-stocking-stuffer/6FMFJVDXEW2XX7YRBYZZCLV3","item_id":"6FMFJVDXEW2XX7YRBYZZCLV3"},"SFKJDFTYGITVMBW6ODSYJWRO":{"name":"3D Printed Articulated Flexi Lizard Fidget Toy | Sensory Desk Pet","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-lizard-fidget-toy-sensory-desk-pet/SFKJDFTYGITVMBW6ODSYJWRO","item_id":"SFKJDFTYGITVMBW6ODSYJWRO"},"5YFRB7AHOZHNWXRQLSWRKM7O":{"name":"3D Printed Articulated Flexi Lizard Fidget Toy | Sensory Desk Pet","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-lizard-fidget-toy-sensory-desk-pet/SFKJDFTYGITVMBW6ODSYJWRO","item_id":"SFKJDFTYGITVMBW6ODSYJWRO"},"GSVOZKOCLLMDH36EX23S5PFN":{"name":"3D Printed Rose Jewelry Box & Desk Organizer | Modern Black & White Decor","price_cents":2900,"url":"https://sweetiger.square.site/product/3d-printed-rose-jewelry-box-desk-organizer-modern-black-white-decor/GSVOZKOCLLMDH36EX23S5PFN","item_id":"GSVOZKOCLLMDH36EX23S5PFN"},"ZL5NVVUZXMZ2OL67OIDLP2UU":{"name":"3D Printed Rose Jewelry Box & Desk Organizer | Modern Black & White Decor","price_cents":2900,"url":"https://sweetiger.square.site/product/3d-printed-rose-jewelry-box-desk-organizer-modern-black-white-decor/GSVOZKOCLLMDH36EX23S5PFN","item_id":"GSVOZKOCLLMDH36EX23S5PFN"},"LFMUU3P7Z27IDUJH54L3GTOP":{"name":"Mini Unicorn Articulated Toy | Sensory Stocking Stuffer","price_cents":1600,"url":"https://sweetiger.square.site/product/mini-unicorn-articulated-toy-sensory-stocking-stuffer/LFMUU3P7Z27IDUJH54L3GTOP","item_id":"LFMUU3P7Z27IDUJH54L3GTOP"},"GKSJAB2YS4OFFDU7O5D3H2GX":{"name":"Mini Unicorn Articulated Toy | Sensory Stocking Stuffer","price_cents":1600,"url":"https://sweetiger.square.site/product/mini-unicorn-articulated-toy-sensory-stocking-stuffer/LFMUU3P7Z27IDUJH54L3GTOP","item_id":"LFMUU3P7Z27IDUJH54L3GTOP"},"UUDNBPULQ7QKHNO5E3E5DVPR":{"name":"3D Printed Articulated Gecko Sculpture - Flexible Spotted Lizard Desk | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-gecko-sculpture-flexible-spotted-lizard-desk-sensory-stocking-stuffer/UUDNBPULQ7QKHNO5E3E5DVPR","item_id":"UUDNBPULQ7QKHNO5E3E5DVPR"},"VM7HLONGVFB3IMFW4ZOCWMVS":{"name":"3D Printed Articulated Gecko Sculpture - Flexible Spotted Lizard Desk | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-gecko-sculpture-flexible-spotted-lizard-desk-sensory-stocking-stuffer/UUDNBPULQ7QKHNO5E3E5DVPR","item_id":"UUDNBPULQ7QKHNO5E3E5DVPR"},"HX372HWGUANA5UOPEHTQ6CPU":{"name":"3D Printed Articulated Spider | Metallic Purple Fidget Toy & Desk Pet | Sensory Stocking Stuffer","price_cents":1500,"url":"https://sweetiger.square.site/product/3d-printed-articulated-spider-metallic-purple-fidget-toy-desk-pet-sensory-stocking-stuffer/HX372HWGUANA5UOPEHTQ6CPU","item_id":"HX372HWGUANA5UOPEHTQ6CPU"},"WUXTQP4Y6EYEZJTDILU4M7XP":{"name":"3D Printed Articulated Spider | Metallic Purple Fidget Toy & Desk Pet | Sensory Stocking Stuffer","price_cents":1500,"url":"https://sweetiger.square.site/product/3d-printed-articulated-spider-metallic-purple-fidget-toy-desk-pet-sensory-stocking-stuffer/HX372HWGUANA5UOPEHTQ6CPU","item_id":"HX372HWGUANA5UOPEHTQ6CPU"},"2DWEXMTLDUTRRALAMELE2JY6":{"name":"3D Printed Articulated Flexi Fish Toy Fidget | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-fish-toy-fidget-sensory-stocking-stuffer/2DWEXMTLDUTRRALAMELE2JY6","item_id":"2DWEXMTLDUTRRALAMELE2JY6"},"RBN7BMDXEQER2ILZE45OUZYJ":{"name":"3D Printed Articulated Flexi Fish Toy Fidget | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-fish-toy-fidget-sensory-stocking-stuffer/2DWEXMTLDUTRRALAMELE2JY6","item_id":"2DWEXMTLDUTRRALAMELE2JY6"},"JR4ECVYPCF5NAHHVAH34B65N":{"name":"Stacked Lemon Vase & Desk Organizer","price_cents":1800,"url":"https://sweetiger.square.site/product/stacked-lemon-vase-desk-organizer/JR4ECVYPCF5NAHHVAH34B65N","item_id":"JR4ECVYPCF5NAHHVAH34B65N"},"KUCPTCYTXHOYCR7AUPPCASE6":{"name":"Stacked Lemon Vase & Desk Organizer","price_cents":1800,"url":"https://sweetiger.square.site/product/stacked-lemon-vase-desk-organizer/JR4ECVYPCF5NAHHVAH34B65N","item_id":"JR4ECVYPCF5NAHHVAH34B65N"},"CIRNX3GCIHUMXJVJJVLXE4VC":{"name":"Modern 3D Printed Spiral Ribbed Planter Pot with Catch Tray (plant not included)","price_cents":3000,"url":"https://sweetiger.square.site/product/modern-3d-printed-spiral-ribbed-planter-pot-with-catch-tray-plant-not-included-/CIRNX3GCIHUMXJVJJVLXE4VC","item_id":"CIRNX3GCIHUMXJVJJVLXE4VC"},"2RXTGZU63F2EFJMFF3LXN3YK":{"name":"Modern 3D Printed Spiral Ribbed Planter Pot with Catch Tray (plant not included)","price_cents":3000,"url":"https://sweetiger.square.site/product/modern-3d-printed-spiral-ribbed-planter-pot-with-catch-tray-plant-not-included-/CIRNX3GCIHUMXJVJJVLXE4VC","item_id":"CIRNX3GCIHUMXJVJJVLXE4VC"},"63NSFKO7POT65M3BU73QDCDZ":{"name":"3D Printed Articulated Flexi Fox Fidget Toy","price_cents":800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-fox-fidget-toy/63NSFKO7POT65M3BU73QDCDZ","item_id":"63NSFKO7POT65M3BU73QDCDZ"},"MUE3WELO5DHZCLPMQSEGLJMM":{"name":"3D Printed Articulated Flexi Fox Fidget Toy","price_cents":800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-fox-fidget-toy/63NSFKO7POT65M3BU73QDCDZ","item_id":"63NSFKO7POT65M3BU73QDCDZ"},"OFIQZH7TMCTP7ZHKJ2TQHSMF":{"name":"Modern 3D Printed Spiral Planter / Catch-All - Violet Frost Glitter","price_cents":3000,"url":"https://sweetiger.square.site/product/modern-3d-printed-spiral-planter-catch-all-violet-frost-glitter/OFIQZH7TMCTP7ZHKJ2TQHSMF","item_id":"OFIQZH7TMCTP7ZHKJ2TQHSMF"},"XMO54PPZSZWDVPNWX56R36TF":{"name":"Modern 3D Printed Spiral Planter / Catch-All - Violet Frost Glitter","price_cents":3000,"url":"https://sweetiger.square.site/product/modern-3d-printed-spiral-planter-catch-all-violet-frost-glitter/OFIQZH7TMCTP7ZHKJ2TQHSMF","item_id":"OFIQZH7TMCTP7ZHKJ2TQHSMF"},"GCOETKZDNPGPEMYJ6N35LGCB":{"name":"Sculpted Beeswax Rose Garden Candle | Artisan Gift for Her","price_cents":3600,"url":"https://sweetiger.square.site/product/sculpted-beeswax-rose-garden-candle-artisan-gift-for-her/GCOETKZDNPGPEMYJ6N35LGCB","item_id":"GCOETKZDNPGPEMYJ6N35LGCB"},"77JEHYHXXOE5WS2YUTCQDHVZ":{"name":"Sculpted Beeswax Rose Garden Candle | Artisan Gift for Her","price_cents":3600,"url":"https://sweetiger.square.site/product/sculpted-beeswax-rose-garden-candle-artisan-gift-for-her/GCOETKZDNPGPEMYJ6N35LGCB","item_id":"GCOETKZDNPGPEMYJ6N35LGCB"},"DV2EPWM6GHTOS7HZIBOHG46K":{"name":"Toy Lobster","price_cents":1800,"url":"https://sweetiger.square.site/product/toy-lobster/DV2EPWM6GHTOS7HZIBOHG46K","item_id":"DV2EPWM6GHTOS7HZIBOHG46K"},"LSEIVORUEABGVES4VUC52SFK":{"name":"Toy Lobster","price_cents":1800,"url":"https://sweetiger.square.site/product/toy-lobster/DV2EPWM6GHTOS7HZIBOHG46K","item_id":"DV2EPWM6GHTOS7HZIBOHG46K"},"HIFPH4WYDEMY76UACEIGVGJY":{"name":"Red & White Layered Beeswax Candle | Gift-Ready Glass Jar","price_cents":3000,"url":"https://sweetiger.square.site/product/red-white-layered-beeswax-candle-gift-ready-glass-jar/HIFPH4WYDEMY76UACEIGVGJY","item_id":"HIFPH4WYDEMY76UACEIGVGJY"},"R4ZZ6FXVGK65S5N5ITRQEYLL":{"name":"Red & White Layered Beeswax Candle | Gift-Ready Glass Jar","price_cents":3000,"url":"https://sweetiger.square.site/product/red-white-layered-beeswax-candle-gift-ready-glass-jar/HIFPH4WYDEMY76UACEIGVGJY","item_id":"HIFPH4WYDEMY76UACEIGVGJY"},"A2LRTUGEATEVMSOYQJPAXRAZ":{"name":"Coral Reef Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/coral-reef-accent-lamp/A2LRTUGEATEVMSOYQJPAXRAZ","item_id":"A2LRTUGEATEVMSOYQJPAXRAZ"},"G4TAT74A3L436SAU4Y5AMQZC":{"name":"Coral Reef Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/coral-reef-accent-lamp/A2LRTUGEATEVMSOYQJPAXRAZ","item_id":"A2LRTUGEATEVMSOYQJPAXRAZ"},"U3X3VBFCGZ7S6QZLEDHQEMHG":{"name":"Cute 3D Printed Teddy Bear Desk Buddy & Accessory Holder | Set of 3 Mini Bear Figurines | Articulated Fidget Toy","price_cents":1100,"url":"https://sweetiger.square.site/product/cute-3d-printed-teddy-bear-desk-buddy-accessory-holder-set-of-3-mini-bear-figurines-articulated-fidget-toy/U3X3VBFCGZ7S6QZLEDHQEMHG","item_id":"U3X3VBFCGZ7S6QZLEDHQEMHG"},"WIAL4FQLD7YQ3RV7SUCISFJ5":{"name":"Cute 3D Printed Teddy Bear Desk Buddy & Accessory Holder | Set of 3 Mini Bear Figurines | Articulated Fidget Toy","price_cents":1100,"url":"https://sweetiger.square.site/product/cute-3d-printed-teddy-bear-desk-buddy-accessory-holder-set-of-3-mini-bear-figurines-articulated-fidget-toy/U3X3VBFCGZ7S6QZLEDHQEMHG","item_id":"U3X3VBFCGZ7S6QZLEDHQEMHG"},"PVR7ZUJH5Z72VO5SEUO4ZA5R":{"name":"3D Printed Articulated Pig Fidget Toy | Cute Flexi Pig Desk Companion & | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-pig-fidget-toy-cute-flexi-pig-desk-companion-sensory-stocking-stuffer/PVR7ZUJH5Z72VO5SEUO4ZA5R","item_id":"PVR7ZUJH5Z72VO5SEUO4ZA5R"},"3QVLCGAQOGRPLEEK33MSRHBR":{"name":"3D Printed Articulated Pig Fidget Toy | Cute Flexi Pig Desk Companion & | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-pig-fidget-toy-cute-flexi-pig-desk-companion-sensory-stocking-stuffer/PVR7ZUJH5Z72VO5SEUO4ZA5R","item_id":"PVR7ZUJH5Z72VO5SEUO4ZA5R"},"G4BG3IDBIGNZAQHKVM4H645H":{"name":"Rainbow Cat Articulated Toy Glows in the dark | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/rainbow-cat-articulated-toy-glows-in-the-dark-sensory-stocking-stuffer/G4BG3IDBIGNZAQHKVM4H645H","item_id":"G4BG3IDBIGNZAQHKVM4H645H"},"CRIMLBOIFCNG4TSDZPKSVV5O":{"name":"Rainbow Cat Articulated Toy Glows in the dark | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/rainbow-cat-articulated-toy-glows-in-the-dark-sensory-stocking-stuffer/G4BG3IDBIGNZAQHKVM4H645H","item_id":"G4BG3IDBIGNZAQHKVM4H645H"},"DMZG6F7F6QLMKJ3TVAU6SNAQ":{"name":"Strawberry Mini Planter Vase & Desk Catchall - Red Decor","price_cents":1800,"url":"https://sweetiger.square.site/product/strawberry-mini-planter-vase-desk-catchall-red-decor/DMZG6F7F6QLMKJ3TVAU6SNAQ","item_id":"DMZG6F7F6QLMKJ3TVAU6SNAQ"},"3IDEKAW7LQ2WCTMODLEM73GK":{"name":"Strawberry Mini Planter Vase & Desk Catchall - Red Decor","price_cents":1800,"url":"https://sweetiger.square.site/product/strawberry-mini-planter-vase-desk-catchall-red-decor/DMZG6F7F6QLMKJ3TVAU6SNAQ","item_id":"DMZG6F7F6QLMKJ3TVAU6SNAQ"},"J5XTY6YYMXDQDPC7E5LMHB4H":{"name":"Sleeping Flexi Puppy Desk Pet | Articulated Dachshund Figurine & | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/sleeping-flexi-puppy-desk-pet-articulated-dachshund-figurine-sensory-stocking-stuffer/J5XTY6YYMXDQDPC7E5LMHB4H","item_id":"J5XTY6YYMXDQDPC7E5LMHB4H"},"WYNZJPQYNPFC33OETWNHQPDB":{"name":"Sleeping Flexi Puppy Desk Pet | Articulated Dachshund Figurine & | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/sleeping-flexi-puppy-desk-pet-articulated-dachshund-figurine-sensory-stocking-stuffer/J5XTY6YYMXDQDPC7E5LMHB4H","item_id":"J5XTY6YYMXDQDPC7E5LMHB4H"},"CHJL3XHLOPNFZDYNLVIZ3SJV":{"name":"Toy Mystery 3-Pack","price_cents":3500,"url":"https://sweetiger.square.site/product/toy-mystery-3-pack/CHJL3XHLOPNFZDYNLVIZ3SJV","item_id":"CHJL3XHLOPNFZDYNLVIZ3SJV"},"EYUX6LUSGOOE7FZVZCN66RXD":{"name":"Toy Mystery 3-Pack","price_cents":3500,"url":"https://sweetiger.square.site/product/toy-mystery-3-pack/CHJL3XHLOPNFZDYNLVIZ3SJV","item_id":"CHJL3XHLOPNFZDYNLVIZ3SJV"},"T7WMPXGCMCVKJA6IOIXS2XM7":{"name":"Blooming Flower Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/blooming-flower-accent-lamp/T7WMPXGCMCVKJA6IOIXS2XM7","item_id":"T7WMPXGCMCVKJA6IOIXS2XM7"},"TFSIWISYLTCATCV3IKGAA2JL":{"name":"Blooming Flower Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/blooming-flower-accent-lamp/T7WMPXGCMCVKJA6IOIXS2XM7","item_id":"T7WMPXGCMCVKJA6IOIXS2XM7"},"X5YEWC5PVT5JCFRPMFUVOML7":{"name":"Lightweight Elven Tiara Circlet - Bright Blue 3D Printed Fantasy Headband | Stocking Stuffer Gift","price_cents":3000,"url":"https://sweetiger.square.site/product/lightweight-elven-tiara-circlet-bright-blue-3d-printed-fantasy-headband-stocking-stuffer-gift/X5YEWC5PVT5JCFRPMFUVOML7","item_id":"X5YEWC5PVT5JCFRPMFUVOML7"},"UTON77LSGNF4DZDWRUC6HFE6":{"name":"Lightweight Elven Tiara Circlet - Bright Blue 3D Printed Fantasy Headband | Stocking Stuffer Gift","price_cents":3000,"url":"https://sweetiger.square.site/product/lightweight-elven-tiara-circlet-bright-blue-3d-printed-fantasy-headband-stocking-stuffer-gift/X5YEWC5PVT5JCFRPMFUVOML7","item_id":"X5YEWC5PVT5JCFRPMFUVOML7"},"TRR6VGC73U5GX5IGDTLWZZFE":{"name":"Sea Urchin Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/sea-urchin-accent-lamp/TRR6VGC73U5GX5IGDTLWZZFE","item_id":"TRR6VGC73U5GX5IGDTLWZZFE"},"JHRJIUW26JNBYTUK6GIDJ6Q6":{"name":"Sea Urchin Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/sea-urchin-accent-lamp/TRR6VGC73U5GX5IGDTLWZZFE","item_id":"TRR6VGC73U5GX5IGDTLWZZFE"},"RXFAQ6MKUKEXXWKFINJYZQ5L":{"name":"Modern Geometric Lattice Bowl - Black 3D-Printed Decorative Basket","price_cents":2000,"url":"https://sweetiger.square.site/product/modern-geometric-lattice-bowl-black-3d-printed-decorative-basket/RXFAQ6MKUKEXXWKFINJYZQ5L","item_id":"RXFAQ6MKUKEXXWKFINJYZQ5L"},"CL5NWX4JCHMBSJPDNTU4TCQ6":{"name":"Modern Geometric Lattice Bowl - Black 3D-Printed Decorative Basket","price_cents":2000,"url":"https://sweetiger.square.site/product/modern-geometric-lattice-bowl-black-3d-printed-decorative-basket/RXFAQ6MKUKEXXWKFINJYZQ5L","item_id":"RXFAQ6MKUKEXXWKFINJYZQ5L"},"V5W45LOCAQ5ACUVTF6CBB3MT":{"name":"3D Printed Articulated Flexi Bunny Figurines | Fidget Toy - Cute Desk Decor & Gift","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-bunny-figurines-fidget-toy-cute-desk-decor-gift/V5W45LOCAQ5ACUVTF6CBB3MT","item_id":"V5W45LOCAQ5ACUVTF6CBB3MT"},"C3E5WGMJ5YLW75GCDOYYQKUG":{"name":"3D Printed Articulated Flexi Bunny Figurines | Fidget Toy - Cute Desk Decor & Gift","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-bunny-figurines-fidget-toy-cute-desk-decor-gift/V5W45LOCAQ5ACUVTF6CBB3MT","item_id":"V5W45LOCAQ5ACUVTF6CBB3MT"},"U5B6M2SHVBON5KCC6G3MY2NA":{"name":"Floral Beeswax Candle in Margarita Glass | 5-Wick Gift for Her","price_cents":4900,"url":"https://sweetiger.square.site/product/floral-beeswax-candle-in-margarita-glass-5-wick-gift-for-her/U5B6M2SHVBON5KCC6G3MY2NA","item_id":"U5B6M2SHVBON5KCC6G3MY2NA"},"X6FAGQKTGTPH2B5WA2OM52IQ":{"name":"Floral Beeswax Candle in Margarita Glass | 5-Wick Gift for Her","price_cents":4900,"url":"https://sweetiger.square.site/product/floral-beeswax-candle-in-margarita-glass-5-wick-gift-for-her/U5B6M2SHVBON5KCC6G3MY2NA","item_id":"U5B6M2SHVBON5KCC6G3MY2NA"},"QGSBDSC67IBSCPM7IW4EXC27":{"name":"Sage Green Organic Wave Bowl Vase - Decorative Centerpiece","price_cents":3900,"url":"https://sweetiger.square.site/product/sage-green-organic-wave-bowl-vase-decorative-centerpiece/QGSBDSC67IBSCPM7IW4EXC27","item_id":"QGSBDSC67IBSCPM7IW4EXC27"},"XE6HSL3ZRRKY7Z5IHRDLEWG3":{"name":"Sage Green Organic Wave Bowl Vase - Decorative Centerpiece","price_cents":3900,"url":"https://sweetiger.square.site/product/sage-green-organic-wave-bowl-vase-decorative-centerpiece/QGSBDSC67IBSCPM7IW4EXC27","item_id":"QGSBDSC67IBSCPM7IW4EXC27"},"IGA6ERP6VD2GJEKH325UZXVQ":{"name":"Artisanal Beeswax Candle & Wax Melt Gift Set | Birthday & Holiday Gift","price_cents":4500,"url":"https://sweetiger.square.site/product/artisanal-beeswax-candle-wax-melt-gift-set-birthday-holiday-gift/IGA6ERP6VD2GJEKH325UZXVQ","item_id":"IGA6ERP6VD2GJEKH325UZXVQ"},"WGAJSPIGOF3F6BSLRXIHC4IL":{"name":"Artisanal Beeswax Candle & Wax Melt Gift Set | Birthday & Holiday Gift","price_cents":4500,"url":"https://sweetiger.square.site/product/artisanal-beeswax-candle-wax-melt-gift-set-birthday-holiday-gift/IGA6ERP6VD2GJEKH325UZXVQ","item_id":"IGA6ERP6VD2GJEKH325UZXVQ"},"LZHOD6WGI3ASYELQBMQY25AL":{"name":"Handcrafted Pure Beeswax Candle | Clean-Burning Gift for Her","price_cents":3000,"url":"https://sweetiger.square.site/product/handcrafted-pure-beeswax-candle-clean-burning-gift-for-her/LZHOD6WGI3ASYELQBMQY25AL","item_id":"LZHOD6WGI3ASYELQBMQY25AL"},"4INJMJTG2EGTQ5PDYCRJA5EY":{"name":"Handcrafted Pure Beeswax Candle | Clean-Burning Gift for Her","price_cents":3000,"url":"https://sweetiger.square.site/product/handcrafted-pure-beeswax-candle-clean-burning-gift-for-her/LZHOD6WGI3ASYELQBMQY25AL","item_id":"LZHOD6WGI3ASYELQBMQY25AL"},"MLKVXW2XVUW3H6MUS43DELAZ":{"name":"3-Tier Honeycomb Display Stand | Dual-Color S-Shelf Organizer (3D printed)","price_cents":3200,"url":"https://sweetiger.square.site/product/3-tier-honeycomb-display-stand-dual-color-s-shelf-organizer-3d-printed-/MLKVXW2XVUW3H6MUS43DELAZ","item_id":"MLKVXW2XVUW3H6MUS43DELAZ"},"2CD7W5X5QCANGAVA3ABPSHAP":{"name":"3-Tier Honeycomb Display Stand | Dual-Color S-Shelf Organizer (3D printed)","price_cents":3200,"url":"https://sweetiger.square.site/product/3-tier-honeycomb-display-stand-dual-color-s-shelf-organizer-3d-printed-/MLKVXW2XVUW3H6MUS43DELAZ","item_id":"MLKVXW2XVUW3H6MUS43DELAZ"},"CWRT6TLOGDBPM6XB2IDTMLGH":{"name":"Organic Betta / Koi Fish Jewelry Tray & Entryway Key Dish","price_cents":2800,"url":"https://sweetiger.square.site/product/organic-betta-koi-fish-jewelry-tray-entryway-key-dish/CWRT6TLOGDBPM6XB2IDTMLGH","item_id":"CWRT6TLOGDBPM6XB2IDTMLGH"},"WLAUNAJEALVKSEKYI5GOJ7PW":{"name":"Organic Betta / Koi Fish Jewelry Tray & Entryway Key Dish","price_cents":2800,"url":"https://sweetiger.square.site/product/organic-betta-koi-fish-jewelry-tray-entryway-key-dish/CWRT6TLOGDBPM6XB2IDTMLGH","item_id":"CWRT6TLOGDBPM6XB2IDTMLGH"},"K6AOBQ6M2OROG5SBC5JTIOBY":{"name":"3D Printed Articulated Skeleton Triceratops | Flexi Dinosaur Fidget Toy | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-skeleton-triceratops-flexi-dinosaur-fidget-toy-sensory-stocking-stuffer/K6AOBQ6M2OROG5SBC5JTIOBY","item_id":"K6AOBQ6M2OROG5SBC5JTIOBY"},"RR35W6YATROIOQ7DTSB2FH6L":{"name":"3D Printed Articulated Skeleton Triceratops | Flexi Dinosaur Fidget Toy | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-skeleton-triceratops-flexi-dinosaur-fidget-toy-sensory-stocking-stuffer/K6AOBQ6M2OROG5SBC5JTIOBY","item_id":"K6AOBQ6M2OROG5SBC5JTIOBY"},"7XHLCZMZPKNKJIDGQL67KTLC":{"name":"Children's Dragon Tiara - Sage Green 3D Printed Fantasy Headband (Child / | Stocking Stuffer Gift","price_cents":1800,"url":"https://sweetiger.square.site/product/children-s-dragon-tiara-sage-green-3d-printed-fantasy-headband-child-stocking-stuffer-gift/7XHLCZMZPKNKJIDGQL67KTLC","item_id":"7XHLCZMZPKNKJIDGQL67KTLC"},"YFCY2FKCLOMLTIYICYTG4YS2":{"name":"Children's Dragon Tiara - Sage Green 3D Printed Fantasy Headband (Child / | Stocking Stuffer Gift","price_cents":1800,"url":"https://sweetiger.square.site/product/children-s-dragon-tiara-sage-green-3d-printed-fantasy-headband-child-stocking-stuffer-gift/7XHLCZMZPKNKJIDGQL67KTLC","item_id":"7XHLCZMZPKNKJIDGQL67KTLC"},"67TBU3SY7XCGTPNSUFDOIQFX":{"name":"Bow Ribbon Photo and Notes Stand (set of 5)","price_cents":1600,"url":"https://sweetiger.square.site/product/bow-ribbon-photo-and-notes-stand-set-of-5-/67TBU3SY7XCGTPNSUFDOIQFX","item_id":"67TBU3SY7XCGTPNSUFDOIQFX"},"MFPPOQLD34R24EUFWY7L4N6A":{"name":"Bow Ribbon Photo and Notes Stand (set of 5)","price_cents":1600,"url":"https://sweetiger.square.site/product/bow-ribbon-photo-and-notes-stand-set-of-5-/67TBU3SY7XCGTPNSUFDOIQFX","item_id":"67TBU3SY7XCGTPNSUFDOIQFX"},"UUQOIPMV4K6B7DJQ6JIJIZXQ":{"name":"Matcha Beeswax Scented Candle | Handmade Gift for Her","price_cents":3000,"url":"https://sweetiger.square.site/product/matcha-beeswax-scented-candle-handmade-gift-for-her/UUQOIPMV4K6B7DJQ6JIJIZXQ","item_id":"UUQOIPMV4K6B7DJQ6JIJIZXQ"},"VWBXIS62BDL33DOW3YWN3WD3":{"name":"Matcha Beeswax Scented Candle | Handmade Gift for Her","price_cents":3000,"url":"https://sweetiger.square.site/product/matcha-beeswax-scented-candle-handmade-gift-for-her/UUQOIPMV4K6B7DJQ6JIJIZXQ","item_id":"UUQOIPMV4K6B7DJQ6JIJIZXQ"},"FJ6IRZE2FLMKTYAWT6H3Q6FJ":{"name":"3D Printed Articulated Flexi Mouse Fidget Toy | Sensory Desk Pet","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-mouse-fidget-toy-sensory-desk-pet/FJ6IRZE2FLMKTYAWT6H3Q6FJ","item_id":"FJ6IRZE2FLMKTYAWT6H3Q6FJ"},"DG43CACXSSHVSSRMQ4X3EL7S":{"name":"3D Printed Articulated Flexi Mouse Fidget Toy | Sensory Desk Pet","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-mouse-fidget-toy-sensory-desk-pet/FJ6IRZE2FLMKTYAWT6H3Q6FJ","item_id":"FJ6IRZE2FLMKTYAWT6H3Q6FJ"},"VXCXEYHDTHW4Z2BOI7OQTQTJ":{"name":"Flexi Crocodile Articulated Toy | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/flexi-crocodile-articulated-toy-sensory-stocking-stuffer/VXCXEYHDTHW4Z2BOI7OQTQTJ","item_id":"VXCXEYHDTHW4Z2BOI7OQTQTJ"},"SVMII7KFDOQPPP6JAYKQOPL4":{"name":"Flexi Crocodile Articulated Toy | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/flexi-crocodile-articulated-toy-sensory-stocking-stuffer/VXCXEYHDTHW4Z2BOI7OQTQTJ","item_id":"VXCXEYHDTHW4Z2BOI7OQTQTJ"},"YELLVXZXEK5JGKGEQUDZTHAG":{"name":"3D Printed Rainbow Wavy Fluted Catchall Dish | Vibrant glow in the dark","price_cents":3200,"url":"https://sweetiger.square.site/product/3d-printed-rainbow-wavy-fluted-catchall-dish-vibrant-glow-in-the-dark/YELLVXZXEK5JGKGEQUDZTHAG","item_id":"YELLVXZXEK5JGKGEQUDZTHAG"},"IWHYRSXKDIYZFNDLBAHNT3GJ":{"name":"3D Printed Rainbow Wavy Fluted Catchall Dish | Vibrant glow in the dark","price_cents":3200,"url":"https://sweetiger.square.site/product/3d-printed-rainbow-wavy-fluted-catchall-dish-vibrant-glow-in-the-dark/YELLVXZXEK5JGKGEQUDZTHAG","item_id":"YELLVXZXEK5JGKGEQUDZTHAG"},"4F5SNPS4E4BVRHR4EBIJYH2P":{"name":"Articulated 3D Printed Octopus Toy | Flexible Tentacle Fidget Desk Buddy | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/articulated-3d-printed-octopus-toy-flexible-tentacle-fidget-desk-buddy-sensory-stocking-stuffer/4F5SNPS4E4BVRHR4EBIJYH2P","item_id":"4F5SNPS4E4BVRHR4EBIJYH2P"},"UR5BHAUKGA5JG6EUU2IBJTJM":{"name":"Articulated 3D Printed Octopus Toy | Flexible Tentacle Fidget Desk Buddy | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/articulated-3d-printed-octopus-toy-flexible-tentacle-fidget-desk-buddy-sensory-stocking-stuffer/4F5SNPS4E4BVRHR4EBIJYH2P","item_id":"4F5SNPS4E4BVRHR4EBIJYH2P"},"PLTNAH5PHRSUBIMRGUFFJMLG":{"name":"Handcrafted Home & Aromatherapy Gift Basket | Housewarming Gift Set","price_cents":7500,"url":"https://sweetiger.square.site/product/handcrafted-home-aromatherapy-gift-basket-housewarming-gift-set/PLTNAH5PHRSUBIMRGUFFJMLG","item_id":"PLTNAH5PHRSUBIMRGUFFJMLG"},"TBDDRMWZL4HKCCDBLP7ALSFK":{"name":"Handcrafted Home & Aromatherapy Gift Basket | Housewarming Gift Set","price_cents":7500,"url":"https://sweetiger.square.site/product/handcrafted-home-aromatherapy-gift-basket-housewarming-gift-set/PLTNAH5PHRSUBIMRGUFFJMLG","item_id":"PLTNAH5PHRSUBIMRGUFFJMLG"},"AJZ7STZPYDR2TLEUGDS5PBTG":{"name":"Sculptural Flame Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/sculptural-flame-accent-lamp/AJZ7STZPYDR2TLEUGDS5PBTG","item_id":"AJZ7STZPYDR2TLEUGDS5PBTG"},"7V7WPAU3ZG6L3PJW63XSEZVA":{"name":"Sculptural Flame Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/sculptural-flame-accent-lamp/AJZ7STZPYDR2TLEUGDS5PBTG","item_id":"AJZ7STZPYDR2TLEUGDS5PBTG"},"LUENBE3HFGKOHOZQSKE4SF4F":{"name":"Handcrafted Autumn Pumpkin Beeswax Candle | Fall Gift & Holiday Decor","price_cents":3000,"url":"https://sweetiger.square.site/product/handcrafted-autumn-pumpkin-beeswax-candle-fall-gift-holiday-decor/LUENBE3HFGKOHOZQSKE4SF4F","item_id":"LUENBE3HFGKOHOZQSKE4SF4F"},"EKH5LXWVDMUDUWHRVSVTR2AT":{"name":"Handcrafted Autumn Pumpkin Beeswax Candle | Fall Gift & Holiday Decor","price_cents":3000,"url":"https://sweetiger.square.site/product/handcrafted-autumn-pumpkin-beeswax-candle-fall-gift-holiday-decor/LUENBE3HFGKOHOZQSKE4SF4F","item_id":"LUENBE3HFGKOHOZQSKE4SF4F"},"DCN2OZWLWYYD7PW5XI4I5HFG":{"name":"3D Printed Modern Fluted Pedestal Planter Bowl - 10\" Matte White","price_cents":3000,"url":"https://sweetiger.square.site/product/3d-printed-modern-fluted-pedestal-planter-bowl-10-matte-white/DCN2OZWLWYYD7PW5XI4I5HFG","item_id":"DCN2OZWLWYYD7PW5XI4I5HFG"},"7SHM325ARKRM5ESGTR3R356H":{"name":"3D Printed Modern Fluted Pedestal Planter Bowl - 10\" Matte White","price_cents":3000,"url":"https://sweetiger.square.site/product/3d-printed-modern-fluted-pedestal-planter-bowl-10-matte-white/DCN2OZWLWYYD7PW5XI4I5HFG","item_id":"DCN2OZWLWYYD7PW5XI4I5HFG"},"VPXQNZPRUV5ESZRSVS63UKH4":{"name":"Premium Personalized Candle Gift Basket | Housewarming & Holiday Gift Set","price_cents":11500,"url":"https://sweetiger.square.site/product/premium-personalized-candle-gift-basket-housewarming-holiday-gift-set/VPXQNZPRUV5ESZRSVS63UKH4","item_id":"VPXQNZPRUV5ESZRSVS63UKH4"},"JMVJAVPZPGEM3LZ25RHSDPBT":{"name":"Premium Personalized Candle Gift Basket | Housewarming & Holiday Gift Set","price_cents":11500,"url":"https://sweetiger.square.site/product/premium-personalized-candle-gift-basket-housewarming-holiday-gift-set/VPXQNZPRUV5ESZRSVS63UKH4","item_id":"VPXQNZPRUV5ESZRSVS63UKH4"},"LP3A65ZZTVRZ3MY6VJRHVA3U":{"name":"3D Printed White Skull Catchall Bowl | Gothic & Halloween Home Decor","price_cents":2000,"url":"https://sweetiger.square.site/product/3d-printed-white-skull-catchall-bowl-gothic-halloween-home-decor/LP3A65ZZTVRZ3MY6VJRHVA3U","item_id":"LP3A65ZZTVRZ3MY6VJRHVA3U"},"HTFAG4OF4LRUBHGGAJX2BFOO":{"name":"3D Printed White Skull Catchall Bowl | Gothic & Halloween Home Decor","price_cents":2000,"url":"https://sweetiger.square.site/product/3d-printed-white-skull-catchall-bowl-gothic-halloween-home-decor/LP3A65ZZTVRZ3MY6VJRHVA3U","item_id":"LP3A65ZZTVRZ3MY6VJRHVA3U"},"5FJWDQY44E3KEUTDWHRHX4I7":{"name":"3D Printed Monstera Coasters (6 Coasters Plus Base)","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-monstera-coasters-6-coasters-plus-base-/5FJWDQY44E3KEUTDWHRHX4I7","item_id":"5FJWDQY44E3KEUTDWHRHX4I7"},"Y32KUS3YYG32IAP3AV2ABDPP":{"name":"3D Printed Monstera Coasters (6 Coasters Plus Base)","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-monstera-coasters-6-coasters-plus-base-/5FJWDQY44E3KEUTDWHRHX4I7","item_id":"5FJWDQY44E3KEUTDWHRHX4I7"},"4S6CPS3U3KYGSFN6NDLDFZ5T":{"name":"3D Printed Articulated Beaded Lizard Sculpture - Flexible Speckled Gila | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-beaded-lizard-sculpture-flexible-speckled-gila-sensory-stocking-stuffer/4S6CPS3U3KYGSFN6NDLDFZ5T","item_id":"4S6CPS3U3KYGSFN6NDLDFZ5T"},"MRLICKXWMLZRZFC5TOWZD7JY":{"name":"3D Printed Articulated Beaded Lizard Sculpture - Flexible Speckled Gila | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-beaded-lizard-sculpture-flexible-speckled-gila-sensory-stocking-stuffer/4S6CPS3U3KYGSFN6NDLDFZ5T","item_id":"4S6CPS3U3KYGSFN6NDLDFZ5T"},"28260835013584972":{"name":"Organic Betta / Koi Fish Jewelry Tray & Entryway Key Dish","price_cents":2800,"url":"https://sweetiger.square.site/product/organic-betta-koi-fish-jewelry-tray-entryway-key-dish/CWRT6TLOGDBPM6XB2IDTMLGH","item_id":"CWRT6TLOGDBPM6XB2IDTMLGH"},"916689147897593":{"name":"Seashell Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/seashell-lamp/5RRWUXHOAYYBRM7RPS4BS6ZI","item_id":"5RRWUXHOAYYBRM7RPS4BS6ZI"},"1838437510651686":{"name":"Stacked Lemon Vase & Desk Organizer","price_cents":1800,"url":"https://sweetiger.square.site/product/stacked-lemon-vase-desk-organizer/JR4ECVYPCF5NAHHVAH34B65N","item_id":"JR4ECVYPCF5NAHHVAH34B65N"},"1763008224950965":{"name":"Coastal Seashell Coaster Set with Matching Shell Holder (Set of 6 coasters plus 1 base)","price_cents":1800,"url":"https://sweetiger.square.site/product/coastal-seashell-coaster-set-with-matching-shell-holder-set-of-6-coasters-plus-1-base-/2UMFD5RESDZXU3VKIG24X7GA","item_id":"2UMFD5RESDZXU3VKIG24X7GA"},"1009535258778176":{"name":"Sage Green Organic Wave Bowl Vase - Decorative Centerpiece","price_cents":3900,"url":"https://sweetiger.square.site/product/sage-green-organic-wave-bowl-vase-decorative-centerpiece/QGSBDSC67IBSCPM7IW4EXC27","item_id":"QGSBDSC67IBSCPM7IW4EXC27"},"2151008222962301":{"name":"Toy Lobster","price_cents":1800,"url":"https://sweetiger.square.site/product/toy-lobster/DV2EPWM6GHTOS7HZIBOHG46K","item_id":"DV2EPWM6GHTOS7HZIBOHG46K"},"1056754150576003":{"name":"Strawberry Mini Planter Vase & Desk Catchall - Red Decor","price_cents":1800,"url":"https://sweetiger.square.site/product/strawberry-mini-planter-vase-desk-catchall-red-decor/DMZG6F7F6QLMKJ3TVAU6SNAQ","item_id":"DMZG6F7F6QLMKJ3TVAU6SNAQ"},"1835340544293180":{"name":"Bow Ribbon Photo and Notes Stand (set of 5)","price_cents":1600,"url":"https://sweetiger.square.site/product/bow-ribbon-photo-and-notes-stand-set-of-5-/67TBU3SY7XCGTPNSUFDOIQFX","item_id":"67TBU3SY7XCGTPNSUFDOIQFX"},"930135356326203":{"name":"3D Printed Banana Bowl","price_cents":3900,"url":"https://sweetiger.square.site/product/3d-printed-banana-bowl/4N3U23QNNOVONPSVXCRZWYIG","item_id":"4N3U23QNNOVONPSVXCRZWYIG"},"1791491225181660":{"name":"3D Printed Monstera Coasters (6 Coasters Plus Base)","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-monstera-coasters-6-coasters-plus-base-/5FJWDQY44E3KEUTDWHRHX4I7","item_id":"5FJWDQY44E3KEUTDWHRHX4I7"},"1068464212553268":{"name":"3D Printed Rainbow Wavy Fluted Catchall Dish | Vibrant glow in the dark","price_cents":3200,"url":"https://sweetiger.square.site/product/3d-printed-rainbow-wavy-fluted-catchall-dish-vibrant-glow-in-the-dark/YELLVXZXEK5JGKGEQUDZTHAG","item_id":"YELLVXZXEK5JGKGEQUDZTHAG"},"1063577516678109":{"name":"3D Printed Rainbow Pedestal Bowl - Fluted Decorative Fruit & Catchall Dish with Drainage Hole","price_cents":3200,"url":"https://sweetiger.square.site/product/3d-printed-rainbow-pedestal-bowl-fluted-decorative-fruit-catchall-dish-with-drainage-hole/DL6UVR7P3ZBY6YZ4KM2RYRTX","item_id":"DL6UVR7P3ZBY6YZ4KM2RYRTX"},"1425677599469144":{"name":"3D Printed Articulated Flexi Mouse Fidget Toy | Sensory Desk Pet","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-mouse-fidget-toy-sensory-desk-pet/FJ6IRZE2FLMKTYAWT6H3Q6FJ","item_id":"FJ6IRZE2FLMKTYAWT6H3Q6FJ"},"1119941404068248":{"name":"3D Printed Articulated Squid, Fidget Toy | Flexible Desk Pet & Ocean | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-squid-fidget-toy-flexible-desk-pet-ocean-sensory-stocking-stuffer/6FMFJVDXEW2XX7YRBYZZCLV3","item_id":"6FMFJVDXEW2XX7YRBYZZCLV3"},"1978672299319641":{"name":"Cute 3D Printed Teddy Bear Desk Buddy & Accessory Holder | Set of 3 Mini Bear Figurines | Articulated Fidget Toy","price_cents":1100,"url":"https://sweetiger.square.site/product/cute-3d-printed-teddy-bear-desk-buddy-accessory-holder-set-of-3-mini-bear-figurines-articulated-fidget-toy/U3X3VBFCGZ7S6QZLEDHQEMHG","item_id":"U3X3VBFCGZ7S6QZLEDHQEMHG"},"1050535451178765":{"name":"3D Printed Articulated Flexi Turtles | Set of 22 | Fidget Toys","price_cents":2000,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-turtles-set-of-22-fidget-toys/Y6STWL7ZLMCR4OLVU4UIDMKX","item_id":"Y6STWL7ZLMCR4OLVU4UIDMKX"},"28374081808916937":{"name":"3D Printed Articulated Flexi Lizard Fidget Toy | Sensory Desk Pet","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-lizard-fidget-toy-sensory-desk-pet/SFKJDFTYGITVMBW6ODSYJWRO","item_id":"SFKJDFTYGITVMBW6ODSYJWRO"},"27715787854783844":{"name":"Premium Personalized Candle Gift Basket | Housewarming & Holiday Gift Set","price_cents":11500,"url":"https://sweetiger.square.site/product/premium-personalized-candle-gift-basket-housewarming-holiday-gift-set/VPXQNZPRUV5ESZRSVS63UKH4","item_id":"VPXQNZPRUV5ESZRSVS63UKH4"},"1731100021443346":{"name":"3D Printed Articulated Skeleton Triceratops | Flexi Dinosaur Fidget Toy | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-skeleton-triceratops-flexi-dinosaur-fidget-toy-sensory-stocking-stuffer/K6AOBQ6M2OROG5SBC5JTIOBY","item_id":"K6AOBQ6M2OROG5SBC5JTIOBY"},"1044671521690613":{"name":"Sleeping Flexi Puppy Desk Pet | Articulated Dachshund Figurine & | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/sleeping-flexi-puppy-desk-pet-articulated-dachshund-figurine-sensory-stocking-stuffer/J5XTY6YYMXDQDPC7E5LMHB4H","item_id":"J5XTY6YYMXDQDPC7E5LMHB4H"},"2083076642580368":{"name":"Handcrafted Botanical Beeswax Candle | Phthalate-Free Gift for Her","price_cents":3000,"url":"https://sweetiger.square.site/product/handcrafted-botanical-beeswax-candle-phthalate-free-gift-for-her/2VSRSAYFFQ35YKJQOBCVJEKO","item_id":"2VSRSAYFFQ35YKJQOBCVJEKO"},"1574107924192844":{"name":"Mini 3D Printed Articulated Flexi Bumblebee Fidget Toy | Cute Desk Pet & Planter Decor","price_cents":1800,"url":"https://sweetiger.square.site/product/mini-3d-printed-articulated-flexi-bumblebee-fidget-toy-cute-desk-pet-planter-decor/ORBGRHC6TQOSKHNZTVSF2YKS","item_id":"ORBGRHC6TQOSKHNZTVSF2YKS"},"1107757418476871":{"name":"Sculpted Beeswax Rose Garden Candle | Artisan Gift for Her","price_cents":3600,"url":"https://sweetiger.square.site/product/sculpted-beeswax-rose-garden-candle-artisan-gift-for-her/GCOETKZDNPGPEMYJ6N35LGCB","item_id":"GCOETKZDNPGPEMYJ6N35LGCB"},"1650827683226957":{"name":"Articulated 3D Printed Octopus Toy | Flexible Tentacle Fidget Desk Buddy | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/articulated-3d-printed-octopus-toy-flexible-tentacle-fidget-desk-buddy-sensory-stocking-stuffer/4F5SNPS4E4BVRHR4EBIJYH2P","item_id":"4F5SNPS4E4BVRHR4EBIJYH2P"},"1836007621101793":{"name":"Sculpted Floral Beeswax Candle | Two-Tone Rose in Stemmed Glass | Gift for Her","price_cents":4900,"url":"https://sweetiger.square.site/product/sculpted-floral-beeswax-candle-two-tone-rose-in-stemmed-glass-gift-for-her/MGAHUXNRAN4SO4A2E3AO7DCO","item_id":"MGAHUXNRAN4SO4A2E3AO7DCO"},"1380104014254852":{"name":"3D Printed Articulated Beaded Lizard Sculpture - Flexible Speckled Gila | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-beaded-lizard-sculpture-flexible-speckled-gila-sensory-stocking-stuffer/4S6CPS3U3KYGSFN6NDLDFZ5T","item_id":"4S6CPS3U3KYGSFN6NDLDFZ5T"},"1395483616110711":{"name":"3D Printed Articulated Gecko Sculpture - Flexible Spotted Lizard Desk | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-gecko-sculpture-flexible-spotted-lizard-desk-sensory-stocking-stuffer/UUDNBPULQ7QKHNO5E3E5DVPR","item_id":"UUDNBPULQ7QKHNO5E3E5DVPR"},"1589279985397730":{"name":"3D Printed Articulated Pig Fidget Toy | Cute Flexi Pig Desk Companion & | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-pig-fidget-toy-cute-flexi-pig-desk-companion-sensory-stocking-stuffer/PVR7ZUJH5Z72VO5SEUO4ZA5R","item_id":"PVR7ZUJH5Z72VO5SEUO4ZA5R"},"3193493444179307":{"name":"Children's Dragon Tiara - Sage Green 3D Printed Fantasy Headband (Child / | Stocking Stuffer Gift","price_cents":1800,"url":"https://sweetiger.square.site/product/children-s-dragon-tiara-sage-green-3d-printed-fantasy-headband-child-stocking-stuffer-gift/7XHLCZMZPKNKJIDGQL67KTLC","item_id":"7XHLCZMZPKNKJIDGQL67KTLC"},"2128673338534134":{"name":"Lightweight Elven Ear Wraps - Bright Blue 3D Printed Fantasy Jewelry (No | Stocking Stuffer Gift","price_cents":2000,"url":"https://sweetiger.square.site/product/lightweight-elven-ear-wraps-bright-blue-3d-printed-fantasy-jewelry-no-stocking-stuffer-gift/GFSEEUWSUICG3WKRS6WHRVJY","item_id":"GFSEEUWSUICG3WKRS6WHRVJY"},"4373443019546439":{"name":"Lightweight Elven Tiara Circlet - Bright Blue 3D Printed Fantasy Headband | Stocking Stuffer Gift","price_cents":3000,"url":"https://sweetiger.square.site/product/lightweight-elven-tiara-circlet-bright-blue-3d-printed-fantasy-headband-stocking-stuffer-gift/X5YEWC5PVT5JCFRPMFUVOML7","item_id":"X5YEWC5PVT5JCFRPMFUVOML7"},"2516317055532638":{"name":"Matcha Beeswax Scented Candle | Handmade Gift for Her","price_cents":3000,"url":"https://sweetiger.square.site/product/matcha-beeswax-scented-candle-handmade-gift-for-her/UUQOIPMV4K6B7DJQ6JIJIZXQ","item_id":"UUQOIPMV4K6B7DJQ6JIJIZXQ"},"1770185887505475":{"name":"Red & White Layered Beeswax Candle | Gift-Ready Glass Jar","price_cents":3000,"url":"https://sweetiger.square.site/product/red-white-layered-beeswax-candle-gift-ready-glass-jar/HIFPH4WYDEMY76UACEIGVGJY","item_id":"HIFPH4WYDEMY76UACEIGVGJY"},"1054246860907068":{"name":"Handcrafted Autumn Pumpkin Beeswax Candle | Fall Gift & Holiday Decor","price_cents":3000,"url":"https://sweetiger.square.site/product/handcrafted-autumn-pumpkin-beeswax-candle-fall-gift-holiday-decor/LUENBE3HFGKOHOZQSKE4SF4F","item_id":"LUENBE3HFGKOHOZQSKE4SF4F"},"1392142176202017":{"name":"Handcrafted Pure Beeswax Candle | Clean-Burning Gift for Her","price_cents":3000,"url":"https://sweetiger.square.site/product/handcrafted-pure-beeswax-candle-clean-burning-gift-for-her/LZHOD6WGI3ASYELQBMQY25AL","item_id":"LZHOD6WGI3ASYELQBMQY25AL"},"1062683973362733":{"name":"3D Printed Modern Fluted Pedestal Planter Bowl - 10\" Matte White","price_cents":3000,"url":"https://sweetiger.square.site/product/3d-printed-modern-fluted-pedestal-planter-bowl-10-matte-white/DCN2OZWLWYYD7PW5XI4I5HFG","item_id":"DCN2OZWLWYYD7PW5XI4I5HFG"},"2607369266352064":{"name":"3-Tier Honeycomb Display Stand | Dual-Color S-Shelf Organizer (3D printed)","price_cents":3200,"url":"https://sweetiger.square.site/product/3-tier-honeycomb-display-stand-dual-color-s-shelf-organizer-3d-printed-/MLKVXW2XVUW3H6MUS43DELAZ","item_id":"MLKVXW2XVUW3H6MUS43DELAZ"},"2372220183582478":{"name":"3D Printed Rose Jewelry Box & Desk Organizer | Modern Black & White Decor","price_cents":2900,"url":"https://sweetiger.square.site/product/3d-printed-rose-jewelry-box-desk-organizer-modern-black-white-decor/GSVOZKOCLLMDH36EX23S5PFN","item_id":"GSVOZKOCLLMDH36EX23S5PFN"},"1065891852599664":{"name":"Modern Black Diamond Mesh Mini Planter & Catchall (3\" Opening)","price_cents":1700,"url":"https://sweetiger.square.site/product/modern-black-diamond-mesh-mini-planter-catchall-3-opening-/ODFGL57DJMKTDM65HQD7U5AZ","item_id":"ODFGL57DJMKTDM65HQD7U5AZ"},"28389965607299957":{"name":"3D Printed Articulated Spider | Metallic Purple Fidget Toy & Desk Pet | Sensory Stocking Stuffer","price_cents":1500,"url":"https://sweetiger.square.site/product/3d-printed-articulated-spider-metallic-purple-fidget-toy-desk-pet-sensory-stocking-stuffer/HX372HWGUANA5UOPEHTQ6CPU","item_id":"HX372HWGUANA5UOPEHTQ6CPU"},"2177531012812709":{"name":"3D Printed White Skull Catchall Bowl | Gothic & Halloween Home Decor","price_cents":2000,"url":"https://sweetiger.square.site/product/3d-printed-white-skull-catchall-bowl-gothic-halloween-home-decor/LP3A65ZZTVRZ3MY6VJRHVA3U","item_id":"LP3A65ZZTVRZ3MY6VJRHVA3U"},"1734666621105509":{"name":"Floral Beeswax Candle in Margarita Glass | 5-Wick Gift for Her","price_cents":4900,"url":"https://sweetiger.square.site/product/floral-beeswax-candle-in-margarita-glass-5-wick-gift-for-her/U5B6M2SHVBON5KCC6G3MY2NA","item_id":"U5B6M2SHVBON5KCC6G3MY2NA"},"1532298541507406":{"name":"Handcrafted Home & Aromatherapy Gift Basket | Housewarming Gift Set","price_cents":7500,"url":"https://sweetiger.square.site/product/handcrafted-home-aromatherapy-gift-basket-housewarming-gift-set/PLTNAH5PHRSUBIMRGUFFJMLG","item_id":"PLTNAH5PHRSUBIMRGUFFJMLG"},"3825915550893203":{"name":"Modern Geometric Lattice Bowl - Black 3D-Printed Decorative Basket","price_cents":2000,"url":"https://sweetiger.square.site/product/modern-geometric-lattice-bowl-black-3d-printed-decorative-basket/RXFAQ6MKUKEXXWKFINJYZQ5L","item_id":"RXFAQ6MKUKEXXWKFINJYZQ5L"},"1409375384450240":{"name":"Artisanal Beeswax Candle & Wax Melt Gift Set | Birthday & Holiday Gift","price_cents":4500,"url":"https://sweetiger.square.site/product/artisanal-beeswax-candle-wax-melt-gift-set-birthday-holiday-gift/IGA6ERP6VD2GJEKH325UZXVQ","item_id":"IGA6ERP6VD2GJEKH325UZXVQ"},"1092626003448178":{"name":"3D Printed Articulated Flexi Fish Toy Fidget | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-fish-toy-fidget-sensory-stocking-stuffer/2DWEXMTLDUTRRALAMELE2JY6","item_id":"2DWEXMTLDUTRRALAMELE2JY6"},"1918864165960221":{"name":"Beeswax Candle Melts | Flower-Shaped, Phthalate-Free | Gift-Ready Set of 14","price_cents":3000,"url":"https://sweetiger.square.site/product/beeswax-candle-melts-flower-shaped-phthalate-free-gift-ready-set-of-14/WU3RZ4QN3M3MCL3GBSTJBEEQ","item_id":"WU3RZ4QN3M3MCL3GBSTJBEEQ"},"1060047960342192":{"name":"3D Articulated Flexi Orca (killer whale) | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-articulated-flexi-orca-killer-whale-sensory-stocking-stuffer/V2UWLTVV43G6JG6JFXW4WSAX","item_id":"V2UWLTVV43G6JG6JFXW4WSAX"},"2214704882434259":{"name":"3D Printed Articulated Flexi Fox Fidget Toy","price_cents":800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-fox-fidget-toy/63NSFKO7POT65M3BU73QDCDZ","item_id":"63NSFKO7POT65M3BU73QDCDZ"},"1372747031051576":{"name":"Toy Bear","price_cents":1800,"url":"https://sweetiger.square.site/product/toy-bear/KCVE5K34G7UVYFCLXXEIQRBE","item_id":"KCVE5K34G7UVYFCLXXEIQRBE"},"2260151644786058":{"name":"3D Printed Articulated Flexi Bunny Figurines | Fidget Toy - Cute Desk Decor & Gift","price_cents":1800,"url":"https://sweetiger.square.site/product/3d-printed-articulated-flexi-bunny-figurines-fidget-toy-cute-desk-decor-gift/V5W45LOCAQ5ACUVTF6CBB3MT","item_id":"V5W45LOCAQ5ACUVTF6CBB3MT"},"1046604618092736":{"name":"Modern 3D Printed Spiral Ribbed Planter Pot with Catch Tray (plant not included)","price_cents":3000,"url":"https://sweetiger.square.site/product/modern-3d-printed-spiral-ribbed-planter-pot-with-catch-tray-plant-not-included-/CIRNX3GCIHUMXJVJJVLXE4VC","item_id":"CIRNX3GCIHUMXJVJJVLXE4VC"},"1077328101304834":{"name":"3D Printed Infinity Cube Fidget Toy - Stress & Anxiety Relief | Sensory Stocking Stuffer","price_cents":1500,"url":"https://sweetiger.square.site/product/3d-printed-infinity-cube-fidget-toy-stress-anxiety-relief-sensory-stocking-stuffer/34PSWISYQVHYG3KMDVMIUB7T","item_id":"34PSWISYQVHYG3KMDVMIUB7T"},"1327624862474087":{"name":"Modern 3D Printed Spiral Planter / Catch-All - Violet Frost Glitter","price_cents":3000,"url":"https://sweetiger.square.site/product/modern-3d-printed-spiral-planter-catch-all-violet-frost-glitter/OFIQZH7TMCTP7ZHKJ2TQHSMF","item_id":"OFIQZH7TMCTP7ZHKJ2TQHSMF"},"4346228012285851":{"name":"3D Printed Glow-in-the-Dark Interlocking Burr Puzzle & Fidget Toy | Sensory Stocking Stuffer","price_cents":800,"url":"https://sweetiger.square.site/product/3d-printed-glow-in-the-dark-interlocking-burr-puzzle-fidget-toy-sensory-stocking-stuffer/XBRTMBE4LZUANJAEK3GSVRB7","item_id":"XBRTMBE4LZUANJAEK3GSVRB7"},"1984936825542119":{"name":"Mini Unicorn Articulated Toy | Sensory Stocking Stuffer","price_cents":1600,"url":"https://sweetiger.square.site/product/mini-unicorn-articulated-toy-sensory-stocking-stuffer/LFMUU3P7Z27IDUJH54L3GTOP","item_id":"LFMUU3P7Z27IDUJH54L3GTOP"},"912679031302076":{"name":"Rainbow Cat Articulated Toy Glows in the dark | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/rainbow-cat-articulated-toy-glows-in-the-dark-sensory-stocking-stuffer/G4BG3IDBIGNZAQHKVM4H645H","item_id":"G4BG3IDBIGNZAQHKVM4H645H"},"1039225422046441":{"name":"Flexi Crocodile Articulated Toy | Sensory Stocking Stuffer","price_cents":1800,"url":"https://sweetiger.square.site/product/flexi-crocodile-articulated-toy-sensory-stocking-stuffer/VXCXEYHDTHW4Z2BOI7OQTQTJ","item_id":"VXCXEYHDTHW4Z2BOI7OQTQTJ"},"902982555897888":{"name":"Cute Axolotl Fidget Toy - 3D Printed Kids Toy | PLA | Ages 3+ | Stocking Stuffer","price_cents":500,"url":"https://sweetiger.square.site/product/cute-axolotl-fidget-toy-3d-printed-kids-toy-pla-ages-3-stocking-stuffer/V66HVC7OB7GCEINMASNVYWGR","item_id":"V66HVC7OB7GCEINMASNVYWGR"},"1129423836312921":{"name":"Blooming Flower Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/blooming-flower-accent-lamp/T7WMPXGCMCVKJA6IOIXS2XM7","item_id":"T7WMPXGCMCVKJA6IOIXS2XM7"},"28358534333841305":{"name":"Sea Urchin Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/sea-urchin-accent-lamp/TRR6VGC73U5GX5IGDTLWZZFE","item_id":"TRR6VGC73U5GX5IGDTLWZZFE"},"1088605987087244":{"name":"Sculptural Flame Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/sculptural-flame-accent-lamp/AJZ7STZPYDR2TLEUGDS5PBTG","item_id":"AJZ7STZPYDR2TLEUGDS5PBTG"},"1082461577515669":{"name":"Coral Reef Accent Lamp","price_cents":4200,"url":"https://sweetiger.square.site/product/coral-reef-accent-lamp/A2LRTUGEATEVMSOYQJPAXRAZ","item_id":"A2LRTUGEATEVMSOYQJPAXRAZ"},"4496602177322818":{"name":"Heart Shaped Rose Keepsake Box","price_cents":2300,"url":"https://sweetiger.square.site/product/heart-shaped-rose-keepsake-box/IKQKIANZKASLCQKQR6AKCMXI","item_id":"IKQKIANZKASLCQKQR6AKCMXI"}};
+    const NUMERIC_ID_ALIASES = {"1009535258778176":"QGSBDSC67IBSCPM7IW4EXC27","1039225422046441":"VXCXEYHDTHW4Z2BOI7OQTQTJ","1044671521690613":"J5XTY6YYMXDQDPC7E5LMHB4H","1046604618092736":"CIRNX3GCIHUMXJVJJVLXE4VC","1050535451178765":"Y6STWL7ZLMCR4OLVU4UIDMKX","1054246860907068":"LUENBE3HFGKOHOZQSKE4SF4F","1056754150576003":"DMZG6F7F6QLMKJ3TVAU6SNAQ","1060047960342192":"V2UWLTVV43G6JG6JFXW4WSAX","1062683973362733":"DCN2OZWLWYYD7PW5XI4I5HFG","1063577516678109":"DL6UVR7P3ZBY6YZ4KM2RYRTX","1065891852599664":"ODFGL57DJMKTDM65HQD7U5AZ","1068464212553268":"YELLVXZXEK5JGKGEQUDZTHAG","1077328101304834":"34PSWISYQVHYG3KMDVMIUB7T","1082461577515669":"A2LRTUGEATEVMSOYQJPAXRAZ","1088605987087244":"AJZ7STZPYDR2TLEUGDS5PBTG","1092626003448178":"2DWEXMTLDUTRRALAMELE2JY6","1107757418476871":"GCOETKZDNPGPEMYJ6N35LGCB","1119941404068248":"6FMFJVDXEW2XX7YRBYZZCLV3","1129423836312921":"T7WMPXGCMCVKJA6IOIXS2XM7","1327624862474087":"OFIQZH7TMCTP7ZHKJ2TQHSMF","1372747031051576":"KCVE5K34G7UVYFCLXXEIQRBE","1380104014254852":"4S6CPS3U3KYGSFN6NDLDFZ5T","1392142176202017":"LZHOD6WGI3ASYELQBMQY25AL","1395483616110711":"UUDNBPULQ7QKHNO5E3E5DVPR","1409375384450240":"IGA6ERP6VD2GJEKH325UZXVQ","1425677599469144":"FJ6IRZE2FLMKTYAWT6H3Q6FJ","1532298541507406":"PLTNAH5PHRSUBIMRGUFFJMLG","1574107924192844":"ORBGRHC6TQOSKHNZTVSF2YKS","1589279985397730":"PVR7ZUJH5Z72VO5SEUO4ZA5R","1650827683226957":"4F5SNPS4E4BVRHR4EBIJYH2P","1731100021443346":"K6AOBQ6M2OROG5SBC5JTIOBY","1734666621105509":"U5B6M2SHVBON5KCC6G3MY2NA","1763008224950965":"2UMFD5RESDZXU3VKIG24X7GA","1770185887505475":"HIFPH4WYDEMY76UACEIGVGJY","1791491225181660":"5FJWDQY44E3KEUTDWHRHX4I7","1835340544293180":"67TBU3SY7XCGTPNSUFDOIQFX","1836007621101793":"MGAHUXNRAN4SO4A2E3AO7DCO","1838437510651686":"JR4ECVYPCF5NAHHVAH34B65N","1918864165960221":"WU3RZ4QN3M3MCL3GBSTJBEEQ","1978672299319641":"U3X3VBFCGZ7S6QZLEDHQEMHG","1984936825542119":"LFMUU3P7Z27IDUJH54L3GTOP","2083076642580368":"2VSRSAYFFQ35YKJQOBCVJEKO","2128673338534134":"GFSEEUWSUICG3WKRS6WHRVJY","2151008222962301":"DV2EPWM6GHTOS7HZIBOHG46K","2177531012812709":"LP3A65ZZTVRZ3MY6VJRHVA3U","2214704882434259":"63NSFKO7POT65M3BU73QDCDZ","2260151644786058":"V5W45LOCAQ5ACUVTF6CBB3MT","2372220183582478":"GSVOZKOCLLMDH36EX23S5PFN","2516317055532638":"UUQOIPMV4K6B7DJQ6JIJIZXQ","2607369266352064":"MLKVXW2XVUW3H6MUS43DELAZ","27715787854783844":"VPXQNZPRUV5ESZRSVS63UKH4","28260835013584972":"CWRT6TLOGDBPM6XB2IDTMLGH","28358534333841305":"TRR6VGC73U5GX5IGDTLWZZFE","28374081808916937":"SFKJDFTYGITVMBW6ODSYJWRO","28389965607299957":"HX372HWGUANA5UOPEHTQ6CPU","3193493444179307":"7XHLCZMZPKNKJIDGQL67KTLC","3825915550893203":"RXFAQ6MKUKEXXWKFINJYZQ5L","4346228012285851":"XBRTMBE4LZUANJAEK3GSVRB7","4373443019546439":"X5YEWC5PVT5JCFRPMFUVOML7","4496602177322818":"IKQKIANZKASLCQKQR6AKCMXI","902982555897888":"V66HVC7OB7GCEINMASNVYWGR","912679031302076":"G4BG3IDBIGNZAQHKVM4H645H","916689147897593":"5RRWUXHOAYYBRM7RPS4BS6ZI","930135356326203":"4N3U23QNNOVONPSVXCRZWYIG"};
+    for (const [numericId, productId] of Object.entries(NUMERIC_ID_ALIASES)) {
+      LOOKUP[numericId] = LOOKUP[productId];
+    }
+    const SHOP_URL = 'https://sweetiger.square.site';
+    const params = new URLSearchParams(window.location.search);
+    const productsParam = params.get('products');
+    const couponParam = params.get('coupon');
+
+    const summaryEl = document.getElementById('summary');
+    const emptyEl = document.getElementById('empty');
+    const emptyTitleEl = document.getElementById('empty-title');
+    const emptyCopyEl = document.getElementById('empty-copy');
+    const itemsEl = document.getElementById('items');
+    const itemCountEl = document.getElementById('item-count');
+    const totalEl = document.getElementById('total');
+    const continueEl = document.getElementById('continue');
+    const noticeEl = document.getElementById('notice');
+    const couponEl = document.getElementById('coupon');
+    const couponCodeEl = document.getElementById('coupon-code');
+
+    const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
+    function showEmpty(kind) {
+      summaryEl.hidden = true;
+      emptyEl.hidden = false;
+      if (kind === 'invalid') {
+        emptyTitleEl.textContent = 'We couldn’t read that selection';
+        emptyCopyEl.textContent = 'The shopping link may be incomplete or expired. Browse the shop to find your items.';
+      } else if (kind === 'unknown') {
+        emptyTitleEl.textContent = 'That item isn’t available here';
+        emptyCopyEl.textContent = 'It may have changed since this link was created. Browse the shop for the current collection.';
+      }
+    }
+
+    function parseProducts(raw) {
+      if (raw == null || raw.trim() === '') return { lines: [], malformed: 0, unknown: 0, hadInput: false };
+      const byItem = new Map();
+      let malformed = 0;
+      let unknown = 0;
+      for (const token of raw.split(',')) {
+        const part = token.trim();
+        if (!part) { malformed++; continue; }
+        const colon = part.lastIndexOf(':');
+        if (colon <= 0 || colon === part.length - 1) { malformed++; continue; }
+        const id = part.slice(0, colon).trim();
+        const qtyText = part.slice(colon + 1).trim();
+        if (!/^[1-9]\d{0,2}$/.test(qtyText)) { malformed++; continue; }
+        const product = LOOKUP[id];
+        if (!product) { unknown++; continue; }
+        const qty = Number(qtyText);
+        const key = product.item_id;
+        const existing = byItem.get(key);
+        if (existing) {
+          existing.quantity += qty;
+        } else {
+          byItem.set(key, { ...product, quantity: qty });
+        }
+      }
+      return { lines: [...byItem.values()], malformed, unknown, hadInput: true };
+    }
+
+    const parsed = parseProducts(productsParam);
+    if (!parsed.hadInput) {
+      showEmpty('missing');
+    } else if (parsed.lines.length === 0) {
+      showEmpty(parsed.unknown > 0 && parsed.malformed === 0 ? 'unknown' : 'invalid');
+    } else {
+      emptyEl.hidden = true;
+      summaryEl.hidden = false;
+      let totalCents = 0;
+      let totalUnits = 0;
+
+      for (const line of parsed.lines) {
+        const lineTotal = line.price_cents * line.quantity;
+        totalCents += lineTotal;
+        totalUnits += line.quantity;
+
+        const li = document.createElement('li');
+        li.className = 'item';
+        const details = document.createElement('div');
+        const name = document.createElement('p');
+        name.className = 'item-name';
+        name.textContent = line.name;
+        const meta = document.createElement('div');
+        meta.className = 'item-meta';
+        meta.textContent = `${line.quantity} × ${money.format(line.price_cents / 100)}`;
+        const price = document.createElement('div');
+        price.className = 'item-total';
+        price.textContent = money.format(lineTotal / 100);
+        details.append(name, meta);
+        li.append(details, price);
+        itemsEl.append(li);
+      }
+
+      itemCountEl.textContent = `${totalUnits} ${totalUnits === 1 ? 'item' : 'items'}`;
+      totalEl.textContent = money.format(totalCents / 100);
+      continueEl.href = parsed.lines.length === 1 ? parsed.lines[0].url : SHOP_URL;
+
+      if (couponParam && couponParam.trim()) {
+        couponCodeEl.textContent = couponParam.trim().slice(0, 80);
+        couponEl.hidden = false;
+      }
+
+      const issues = [];
+      if (parsed.unknown) issues.push(`${parsed.unknown} ${parsed.unknown === 1 ? 'selection could not' : 'selections could not'} be matched`);
+      if (parsed.malformed) issues.push(`${parsed.malformed} ${parsed.malformed === 1 ? 'selection was' : 'selections were'} incomplete`);
+      if (issues.length) {
+        noticeEl.textContent = `${issues.join(' and ')}. The items shown below are ready to review.`;
+        noticeEl.hidden = false;
+      }
+    }
+  </script>
+</body>
+</html>
